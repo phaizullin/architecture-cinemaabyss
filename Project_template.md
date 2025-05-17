@@ -347,7 +347,7 @@ minikube tunnel
 ```
 
 Потом вызовите 
-https://cinemaabyss.example.com/api/movies
+https://cinemaabyss.example.com/api/movies и приложите скриншот
 
 
 ## Удаляем все
