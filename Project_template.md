@@ -352,8 +352,6 @@ https://cinemaabyss.example.com/api/movies и приложите скриншо�
 
 ## Удаляем все
 
-Установите https://istio.io/latest/docs/reference/commands/istioctl/
-
 ```bash
 kubectl delete all --all -n cinemaabyss
 kubectl delete namespace cinemaabyss
