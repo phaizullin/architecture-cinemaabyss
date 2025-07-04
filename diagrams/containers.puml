@@ -1,0 +1,61 @@
+@startuml CinemaAbyss To-Be Architecture - Container Diagram
+!include ./C4-lib/C4_Component.puml
+
+title To-Be Архитектура КиноБездны
+
+Person(user, "Пользователь", "Клиент системы КиноБездна")
+
+System_Boundary(cinemaabyss, "Система КиноБездна") {
+    
+    Container(api_gateway, "API Gateway", "Go/HTTP", "Единая точка входа для всех клиентских запросов. Реализует паттерн Strangler Fig для постепенного перехода от монолита к микросервисам")
+    
+    Container(monolith, "Монолитное приложение", "Go/HTTP", "Исходное приложение, содержащее все домены: пользователи, фильмы, платежи, подписки")
+    
+    Container(movies_service, "Movies Service", "Go/HTTP", "Микросервис домена фильмов. Обрабатывает метаданные фильмов, рейтинги, жанры")
+    
+    Container(events_service, "Events Service", "Go/HTTP", "Микросервис событий. Обрабатывает события между сервисами через Kafka")
+    
+    Container(user_service, "User Service", "Go/HTTP", "Микросервис домена пользователей. Управляет регистрацией, аутентификацией, профилями")
+    
+    Container(payment_service, "Payment Service", "Go/HTTP", "Микросервис домена платежей. Обрабатывает транзакции, подписки, биллинг")
+    
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL", "Основная база данных для хранения данных всех доменов")
+    
+    ContainerDb(kafka, "Apache Kafka", "Kafka", "Message broker для асинхронной коммуникации между сервисами")
+    
+    Container(kafka_ui, "Kafka UI", "Web UI", "Веб-интерфейс для мониторинга и управления Kafka топиками")
+}
+
+System_Ext(external_payment, "Внешняя платежная система", "API для обработки платежей")
+
+Rel(user, api_gateway, "Использует", "HTTP/HTTPS")
+
+Rel(api_gateway, monolith, "Проксирует запросы", "HTTP")
+Rel(api_gateway, movies_service, "Проксирует запросы фильмов", "HTTP")
+Rel(api_gateway, user_service, "Проксирует запросы пользователей", "HTTP")
+Rel(api_gateway, payment_service, "Проксирует запросы платежей", "HTTP")
+Rel(api_gateway, events_service, "Проксирует запросы событий", "HTTP")
+
+Rel(monolith, postgres, "Читает/записывает данные", "SQL")
+Rel(monolith, events_service, "Публикует события", "HTTP")
+
+Rel(movies_service, postgres, "Читает/записывает данные фильмов", "SQL")
+Rel(movies_service, events_service, "Публикует события фильмов", "HTTP")
+
+Rel(user_service, postgres, "Читает/записывает данные пользователей", "SQL")
+Rel(user_service, events_service, "Публикует события пользователей", "HTTP")
+
+Rel(payment_service, postgres, "Читает/записывает данные платежей", "SQL")
+Rel(payment_service, events_service, "Публикует события платежей", "HTTP")
+Rel(payment_service, external_payment, "Обрабатывает платежи", "API")
+
+Rel(events_service, kafka, "Публикует/потребляет сообщения", "Kafka Protocol")
+Rel(events_service, postgres, "Сохраняет события", "SQL")
+
+Rel(kafka_ui, kafka, "Мониторит и управляет", "HTTP")
+
+Rel(movies_service, user_service, "Получает события пользователей", "Kafka")
+Rel(user_service, payment_service, "Получает события платежей", "Kafka")
+Rel(payment_service, user_service, "Получает события пользователей", "Kafka")
+
+@enduml 
